@@ -20,5 +20,5 @@ int main(int argc, char **argv, char **envp)
         }
     }
     minishell_loop(env_list);
-    return (0);
+    return (env_list->last_ex_status);
 }

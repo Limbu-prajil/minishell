@@ -9,6 +9,7 @@ typedef struct s_env
     char    *key;
     char    *value;
     struct  s_env   *next;
+    int     last_ex_status;
 } t_env;
 
 t_env *init_env_list(char **envp);

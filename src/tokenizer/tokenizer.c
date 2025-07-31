@@ -1,4 +1,5 @@
 #include "../../includes/tokenizer.h"
+#include "../../includes/env.h"
 
 static void	handle_spec_or_word(const char *input, size_t *i, t_token **tokens)
 {
@@ -30,10 +31,35 @@ static int	handle_quotes(const char *input, size_t *i, t_token **tokens)
 	return (1);
 }
 
-static void	handle_normal_word(const char *input, size_t *i, t_token **tokens)
+///helper slice for var expansion///
+
+static char *slice(int i, char *str)
+{
+    int j = i;
+    char *res;
+    int len;
+    while (str[j])
+    {
+        len++;
+        j++;
+    }
+    res = malloc(len + 1);
+    j = 0;
+    while(str[i])
+    {
+        res[j] = str[i];
+        j++;
+        i++;
+    }
+    res[j] = '\0';
+    return res;
+}
+////////////
+
+static void	handle_normal_word(const char *input, size_t *i, t_token **tokens, t_env *env_list)
 {
 	size_t	start = *i;
-	char	*val;
+	char	*token_val;
 	char	quote;
 
 	while (input[*i] && !ft_isspace(input[*i]))
@@ -50,12 +76,30 @@ static void	handle_normal_word(const char *input, size_t *i, t_token **tokens)
 		}
 		(*i)++;
 	}
-	val = ft_strndup(&input[start], *i - start);
-	add_token(tokens, create_token(TOKEN_WORD, val));
-	free(val);
+	/////////////////////handle $sihn expansion/////////////////////
+	token_val = ft_strndup(&input[start], *i - start);
+	printf("\n\n\n");
+	printf("token_val: %s\n", token_val);
+	int j = 0;
+	//int k = 0;
+	while (token_val[j])
+	{
+		if (token_val[j] == '$')
+			break;
+		j++;
+	}
+	j++;
+	printf("index j: %d", j);
+	char *key = slice(j, token_val);
+	printf("key: %s and value: %s\n", key, get_env_value(env_list, key));
+	if (!get_env_value(env_list, key))
+		add_token(tokens, create_token(TOKEN_WORD, token_val));
+	else
+		add_token(tokens, create_token(TOKEN_WORD, get_env_value(env_list, key)));
+	free(token_val);
 }
 
-t_token	*tokenize(const char *input)
+t_token	*tokenize(const char *input, t_env *env_list)
 {
 	t_token	*tokens;
 	size_t	i;
@@ -69,7 +113,7 @@ t_token	*tokenize(const char *input)
 		if (ft_isspace(input[i]))
 			i++;
 		else if (!ft_isschar(input[i]) && input[i] != '\'' && input[i] != '"')
-			handle_normal_word(input, &i, &tokens);
+			handle_normal_word(input, &i, &tokens, env_list);
 		else if (input[i] == '\'' || input[i] == '"')
 		{
 			if (!handle_quotes(input, &i, &tokens))

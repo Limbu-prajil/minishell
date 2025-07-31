@@ -3,6 +3,8 @@
 
 #include <stdio.h>
 # include "utils.h"
+# include "env.h"
+
 typedef enum e_token_type
 {
     TOKEN_WORD,
@@ -22,7 +24,7 @@ typedef struct s_token
 }   t_token;
 
 // tokenizer.c
-t_token *tokenize(const char *input);
+t_token *tokenize(const char *input, t_env *env_list);
 
 // utils/
 void    free_tokens(t_token *head);
